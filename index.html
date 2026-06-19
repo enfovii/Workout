@@ -1,0 +1,77 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#071d41" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="PPL Tracker" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <title>PPL Workout Tracker</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.svg" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="topbar" aria-label="Workout overview">
+        <div>
+          <p class="eyebrow">A/B Push Pull Legs</p>
+          <h1 id="pageTitle">A Side</h1>
+          <p id="pageSubtitle" class="muted">A-side workouts: Push, Pull, Legs, then rest.</p>
+        </div>
+        <div class="streak-card">
+          <span id="weekCompleteCount">0/20</span>
+          <small>exercises done</small>
+        </div>
+      </section>
+
+      <section class="week-tabs" aria-label="Workout week selector">
+        <button class="week-tab active" type="button" data-week="1">A Side</button>
+        <button class="week-tab" type="button" data-week="2">B Side</button>
+      </section>
+
+      <section class="legend" aria-label="Rep colour key">
+        <div><span class="dot green"></span>12 reps: move up weight when all 3 sets hit 12</div>
+        <div><span class="dot orange"></span>8-11 reps: keep building</div>
+        <div><span class="dot red"></span>Below 8 reps: reduce or repeat weight</div>
+      </section>
+
+      <section id="weekGrid" class="week-grid" aria-label="Workout days"></section>
+    </main>
+
+    <template id="dayTemplate">
+      <article class="day-card">
+        <header class="day-header">
+          <div>
+            <p class="day-kicker"></p>
+            <h2></h2>
+          </div>
+        </header>
+        <div class="exercise-table"></div>
+      </article>
+    </template>
+
+    <template id="exerciseTemplate">
+      <article class="exercise-row">
+        <label class="exercise-check-wrap">
+          <input class="exercise-complete" type="checkbox" />
+          <span class="exercise-name-wrap">
+            <strong class="exercise-name"></strong>
+            <small>Target 8-12 reps</small>
+          </span>
+        </label>
+        <input class="weight-input" type="text" inputmode="decimal" placeholder="Weight" aria-label="Weight" />
+        <div class="rep-inputs" aria-label="Set reps">
+          <input class="rep-input" type="number" inputmode="numeric" min="0" max="99" placeholder="Set 1" aria-label="Set 1 reps" />
+          <input class="rep-input" type="number" inputmode="numeric" min="0" max="99" placeholder="Set 2" aria-label="Set 2 reps" />
+          <input class="rep-input" type="number" inputmode="numeric" min="0" max="99" placeholder="Set 3" aria-label="Set 3 reps" />
+        </div>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
