@@ -63,7 +63,12 @@
             <small>Target 8-12 reps</small>
           </span>
         </label>
-        <input class="weight-input" type="text" inputmode="decimal" placeholder="Weight" aria-label="Weight" />
+        <div class="weight-control">
+          <select class="weight-input" aria-label="Weight">
+            <option value="">Weight</option>
+          </select>
+          <small class="weight-description">Choose a weight to see plates.</small>
+        </div>
         <div class="rep-inputs" aria-label="Set reps">
           <input class="rep-input" type="number" inputmode="numeric" min="0" max="99" placeholder="Set 1" aria-label="Set 1 reps" />
           <input class="rep-input" type="number" inputmode="numeric" min="0" max="99" placeholder="Set 2" aria-label="Set 2 reps" />
