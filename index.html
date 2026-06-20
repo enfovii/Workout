@@ -1,9 +1,13 @@
 
+
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
     <meta name="theme-color" content="#071d41" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="PPL Tracker" />
@@ -335,6 +339,37 @@ h1 {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.45rem;
+}
+
+.rep-control {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.set-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.set-action {
+  min-height: 2.35rem;
+  border-radius: 12px;
+  padding: 0.5rem;
+  color: #ffffff;
+  background: var(--navy);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.set-action.reset-sets {
+  color: var(--ink);
+  background: #e6e7eb;
+}
+
+.set-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
 }
 
 .rep-input {
@@ -669,15 +704,39 @@ h1 {
           </select>
           <small class="weight-description">Choose a weight to see plates.</small>
         </div>
-        <div class="rep-inputs" aria-label="Set reps">
-          <input class="rep-input" type="number" inputmode="numeric" min="0" max="99" placeholder="Set 1" aria-label="Set 1 reps" />
-          <input class="rep-input" type="number" inputmode="numeric" min="0" max="99" placeholder="Set 2" aria-label="Set 2 reps" />
-          <input class="rep-input" type="number" inputmode="numeric" min="0" max="99" placeholder="Set 3" aria-label="Set 3 reps" />
+        <div class="rep-control">
+          <div class="rep-inputs" aria-label="Set reps">
+            <input class="rep-input" type="number" inputmode="numeric" min="0" max="99" placeholder="Set 1" aria-label="Set 1 reps" />
+            <input class="rep-input" type="number" inputmode="numeric" min="0" max="99" placeholder="Set 2" aria-label="Set 2 reps" />
+            <input class="rep-input" type="number" inputmode="numeric" min="0" max="99" placeholder="Set 3" aria-label="Set 3 reps" />
+          </div>
+          <div class="set-actions">
+            <button class="set-action reset-sets" type="button">Reset sets</button>
+            <button class="set-action increase-weight" type="button">Increase weight</button>
+          </div>
         </div>
       </article>
     </template>
 
     <script>
+document.addEventListener(
+  "gesturestart",
+  (event) => {
+    event.preventDefault();
+  },
+  { passive: false },
+);
+
+document.addEventListener(
+  "touchmove",
+  (event) => {
+    if (event.touches.length > 1) {
+      event.preventDefault();
+    }
+  },
+  { passive: false },
+);
+
 const weeks = {
   1: {
     title: "A Side",
@@ -863,6 +922,13 @@ function renderWeightDescription(value) {
   return option.plates;
 }
 
+function updateRepInputs(repInputs, reps) {
+  repInputs.forEach((input, setIndex) => {
+    input.value = reps[setIndex] || "";
+    input.className = `rep-input ${repClass(input.value)}`;
+  });
+}
+
 function render() {
   const week = weeks[activeWeek];
   els.pageTitle.textContent = week.title;
@@ -922,14 +988,15 @@ function renderWeek(week) {
 
       if (kettlebellOnly) {
         row.querySelector(".weight-control").remove();
-        row.querySelector(".rep-inputs").remove();
+        row.querySelector(".rep-control").remove();
         table.append(row);
         return;
       }
 
       const weightInput = row.querySelector(".weight-input");
       const weightDescription = row.querySelector(".weight-description");
-      Object.keys(weightOptions).forEach((weight) => {
+      const availableWeights = Object.keys(weightOptions);
+      availableWeights.forEach((weight) => {
         const option = document.createElement("option");
         option.value = weight;
         option.textContent = weight;
@@ -941,6 +1008,7 @@ function renderWeek(week) {
       weightInput.addEventListener("change", () => {
         exerciseLog.weight = weightInput.value;
         weightDescription.textContent = renderWeightDescription(exerciseLog.weight);
+        updateIncreaseButtonState();
         saveState();
       });
 
@@ -955,6 +1023,39 @@ function renderWeek(week) {
           saveState();
         });
       });
+
+      const resetSetsButton = row.querySelector(".reset-sets");
+      resetSetsButton.setAttribute("aria-label", `Reset ${exerciseName} sets`);
+      resetSetsButton.addEventListener("click", () => {
+        exerciseLog.reps = ["", "", ""];
+        exerciseLog.complete = false;
+        completeInput.checked = false;
+        row.classList.remove("is-exercise-complete");
+        updateRepInputs(repInputs, exerciseLog.reps);
+        saveState();
+      });
+
+      const increaseWeightButton = row.querySelector(".increase-weight");
+      function updateIncreaseButtonState() {
+        increaseWeightButton.disabled =
+          availableWeights.indexOf(exerciseLog.weight) === availableWeights.length - 1;
+      }
+
+      increaseWeightButton.setAttribute("aria-label", `Increase ${exerciseName} weight`);
+      increaseWeightButton.addEventListener("click", () => {
+        const currentWeightIndex = availableWeights.indexOf(exerciseLog.weight);
+        const nextWeight =
+          currentWeightIndex >= 0 ? availableWeights[currentWeightIndex + 1] : availableWeights[0];
+        if (!nextWeight) return;
+        exerciseLog.weight = nextWeight;
+        weightInput.value = nextWeight;
+        weightDescription.textContent = renderWeightDescription(nextWeight);
+        exerciseLog.reps = ["", "", ""];
+        updateRepInputs(repInputs, exerciseLog.reps);
+        updateIncreaseButtonState();
+        saveState();
+      });
+      updateIncreaseButtonState();
 
       table.append(row);
     });
