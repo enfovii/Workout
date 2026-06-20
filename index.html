@@ -292,6 +292,34 @@ h1 {
   min-width: 0;
 }
 
+.exercise-status {
+  display: none;
+  flex: 0 0 auto;
+  margin-left: auto;
+  border-radius: 999px;
+  padding: 0.34rem 0.55rem;
+  color: #ffffff;
+  background: var(--navy);
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.03em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.exercise-status.is-visible {
+  display: inline-flex;
+}
+
+.exercise-status.is-stay {
+  color: var(--ink);
+  background: #e6e7eb;
+}
+
+.exercise-status.is-increase {
+  background: var(--green);
+}
+
 .exercise-complete {
   flex: 0 0 auto;
   width: 1.35rem;
@@ -697,6 +725,7 @@ h1 {
             <strong class="exercise-name"></strong>
             <small>Target 8-12 reps</small>
           </span>
+          <span class="exercise-status" aria-live="polite"></span>
         </label>
         <div class="weight-control">
           <select class="weight-input" aria-label="Weight">
@@ -929,6 +958,25 @@ function updateRepInputs(repInputs, reps) {
   });
 }
 
+function shouldIncreaseWeight(reps) {
+  return reps.length === 3 && reps.every((value) => Number(value) >= 12);
+}
+
+function updateExerciseStatus(statusEl, exerciseLog) {
+  statusEl.className = "exercise-status";
+  statusEl.textContent = "";
+  if (!exerciseLog.complete) return;
+
+  if (shouldIncreaseWeight(exerciseLog.reps)) {
+    statusEl.textContent = "Increase weight";
+    statusEl.classList.add("is-visible", "is-increase");
+    return;
+  }
+
+  statusEl.textContent = "Stay on weight";
+  statusEl.classList.add("is-visible", "is-stay");
+}
+
 function render() {
   const week = weeks[activeWeek];
   els.pageTitle.textContent = week.title;
@@ -989,10 +1037,12 @@ function renderWeek(week) {
       if (kettlebellOnly) {
         row.querySelector(".weight-control").remove();
         row.querySelector(".rep-control").remove();
+        row.querySelector(".exercise-status").remove();
         table.append(row);
         return;
       }
 
+      const exerciseStatus = row.querySelector(".exercise-status");
       const weightInput = row.querySelector(".weight-input");
       const weightDescription = row.querySelector(".weight-description");
       const availableWeights = Object.keys(weightOptions);
@@ -1020,9 +1070,11 @@ function renderWeek(week) {
         input.addEventListener("input", () => {
           exerciseLog.reps[setIndex] = input.value;
           input.className = `rep-input ${repClass(input.value)}`;
+          updateExerciseStatus(exerciseStatus, exerciseLog);
           saveState();
         });
       });
+      updateExerciseStatus(exerciseStatus, exerciseLog);
 
       const resetSetsButton = row.querySelector(".reset-sets");
       resetSetsButton.setAttribute("aria-label", `Reset ${exerciseName} sets`);
@@ -1032,6 +1084,7 @@ function renderWeek(week) {
         completeInput.checked = false;
         row.classList.remove("is-exercise-complete");
         updateRepInputs(repInputs, exerciseLog.reps);
+        updateExerciseStatus(exerciseStatus, exerciseLog);
         saveState();
       });
 
@@ -1051,7 +1104,11 @@ function renderWeek(week) {
         weightInput.value = nextWeight;
         weightDescription.textContent = renderWeightDescription(nextWeight);
         exerciseLog.reps = ["", "", ""];
+        exerciseLog.complete = false;
+        completeInput.checked = false;
+        row.classList.remove("is-exercise-complete");
         updateRepInputs(repInputs, exerciseLog.reps);
+        updateExerciseStatus(exerciseStatus, exerciseLog);
         updateIncreaseButtonState();
         saveState();
       });
